@@ -1,126 +1,147 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Current Efforts</title>
-        <link rel="icon" type="image/png" href="favicon.png">
-        <style>
-* {
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    box-sizing: border-box;
-}
+  <head>
+    <title>Current Efforts</title>
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <style>
+      * {
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+      }
 
-html, body {
-    height: 100%;
-    width: 100%;
-}
+      html,
+      body {
+        height: 100%;
+        width: 100%;
+      }
 
-div {
-    width: 50%;
-    height: 50%;
-    float: left;
-}
+      div {
+        width: 50%;
+        height: 50%;
+        float: left;
+      }
 
-div:nth-of-type(1) {
-    background: #ccc;
-}
+      div:nth-of-type(1) {
+        background: #ccc;
+      }
 
-div:nth-of-type(2) {
-    background: #bbb;
-    border-left: 1px solid #f00;
-}
+      div:nth-of-type(2) {
+        background: #bbb;
+        border-left: 1px solid #f00;
+      }
 
-div:nth-of-type(3) {
-    background: #aaa;
-    border-top: 1px solid #f00;
-}
+      div:nth-of-type(3) {
+        background: #aaa;
+        border-top: 1px solid #f00;
+      }
 
-div:nth-of-type(4) {
-    background: #ddd;
-    border-top: 1px solid #f00;
-    border-left: 1px solid #f00;
-}
+      div:nth-of-type(4) {
+        background: #ddd;
+        border-top: 1px solid #f00;
+        border-left: 1px solid #f00;
+      }
 
+      input {
+        width: 100%;
+        font-weight: bold;
+      }
 
+      element-persister {
+        height: 100%;
+      }
+      textarea {
+        width: 100%;
+        height: 80%;
+      }
+      .textwrapper {
+        border: 1px solid #999999;
+        margin: 5px 0;
+        padding: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <element-persister>
+      <div>
+        <input data-persistance-id="h_ul" />
+        <textarea data-persistance-id="ta_ul"></textarea>
+      </div>
+      <div>
+        <input data-persistance-id="h_ur" />
+        <textarea data-persistance-id="ta_ur"></textarea>
+      </div>
+      <div>
+        <input data-persistance-id="h_bl" />
+        <textarea data-persistance-id="ta_bl"></textarea>
+      </div>
+      <div>
+        <input data-persistance-id="h_br" />
+        <textarea data-persistance-id="ta_br"></textarea>
+      </div>
+    </element-persister>
+  </body>
 
-input {
-    width: 100%;
-    font-weight: bold;
-}
+  <script type="module">
+    const debounce = (wait, callback) => {
+      let timeout = null;
+      return (...args) => {
+        const next = () => callback(...args);
+        clearTimeout(timeout);
+        timeout = setTimeout(next, wait);
+      };
+    };
 
-form {
-    height:100%;
-}
-textarea {
-  width:100%;
-  height:80%;
-}
-.textwrapper {
-  border:1px solid #999999;
-  margin:5px 0;
-  padding:3px;
-}
-        </style>`
-        <script>
-            function save() {
-                let item1 = document.getElementById("h_ul").value;
-                localStorage.setItem('h_ul', item1);
-                item1 = document.getElementById("ta_ul").value;
-                localStorage.setItem('ta_ul', item1);
+    class ElementPersister extends HTMLElement {
+      PERSISTANCE_ID_ATTR_NAME = "data-persistance-id";
 
-                item1 = document.getElementById("h_ur").value;
-                localStorage.setItem('h_ur', item1);
-                item1 = document.getElementById("ta_ur").value;
-                localStorage.setItem('ta_ur', item1);
+      _getDomElementsToPersist() {
+        const elementsToPersistQuery = `[${this.PERSISTANCE_ID_ATTR_NAME}]:not([${this.PERSISTANCE_ID_ATTR_NAME}=""])`;
+        const elementsToPersist = Array.from(
+          this.querySelectorAll(elementsToPersistQuery)
+        );
+        return elementsToPersist.filter((element) =>
+          element.hasAttribute(this.PERSISTANCE_ID_ATTR_NAME)
+        );
+      }
 
-                item1 = document.getElementById("h_bl").value;
-                localStorage.setItem('h_bl', item1);
-                item1 = document.getElementById("ta_bl").value;
-                localStorage.setItem('ta_bl', item1);
+      _setPersistedValue(domElement) {
+        const persistanceId = domElement.getAttribute(
+          this.PERSISTANCE_ID_ATTR_NAME
+        );
+        const persistedValue = localStorage.getItem(persistanceId) ?? "";
+        domElement.value = persistedValue;
+      }
 
-                item1 = document.getElementById("h_br").value;
-                localStorage.setItem('h_br', item1);
-                item1 = document.getElementById("ta_br").value;
-                localStorage.setItem('ta_br', item1);
+      _persistValue(domElement) {
+        const persistanceId = domElement.getAttribute(
+          this.PERSISTANCE_ID_ATTR_NAME
+        );
+        localStorage.setItem(persistanceId, domElement.value);
+      }
 
-                console.log("submitted");
-            }
+      _fillDomElementsWithPersistedValues() {
+        const elementsToPersist = this._getDomElementsToPersist();
+        elementsToPersist.forEach((element) =>
+          this._setPersistedValue(element)
+        );
+      }
 
-            document.addEventListener("DOMContentLoaded", function(){
-                let item1 = localStorage.getItem('h_ul');
-                document.getElementById("h_ul").value = item1;
-                item1 = localStorage.getItem('ta_ul');
-                document.getElementById("ta_ul").value = item1;
+      _setupDomElementsPersisting() {
+        const changeHandler = (event) => {
+          this._getDomElementsToPersist().forEach((element) =>
+            this._persistValue(element)
+          );
+        };
 
-                item1 = localStorage.getItem('h_ur');
-                document.getElementById("h_ur").value = item1;
-                item1 = localStorage.getItem('ta_ur');
-                document.getElementById("ta_ur").value = item1;
+        this.addEventListener("input", debounce(250, changeHandler));
+      }
 
-                item1 = localStorage.getItem('h_bl');
-                document.getElementById("h_bl").value = item1;
-                item1 = localStorage.getItem('ta_bl');
-                document.getElementById("ta_bl").value = item1;
-
-                item1 = localStorage.getItem('h_br');
-                document.getElementById("h_br").value = item1;
-                item1 = localStorage.getItem('ta_br');
-                document.getElementById("ta_br").value = item1;
-});
-            
-        </script>
-    </head>
-    <body>
-        <!-- <div> -->
-        <form onsubmit="save()">
-            <div><input id="h_ul"/><textarea id="ta_ul"></textarea></div>
-            <div><input id="h_ur"/><textarea id="ta_ur"></textarea></div>
-            <div><input id="h_bl"/><textarea id="ta_bl"></textarea></div>
-            <div><input id="h_br"/><textarea id="ta_br"></textarea></div>
-            <input type="submit" style="display: none" />
-        </form>
-    <!-- </div> -->
-    </body>
+      connectedCallback() {
+        this._fillDomElementsWithPersistedValues();
+        this._setupDomElementsPersisting();
+      }
+    }
+    window.customElements.define("element-persister", ElementPersister);
+  </script>
 </html>
-
-
