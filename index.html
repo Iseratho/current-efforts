@@ -91,11 +91,12 @@
         --spacing: 8px;
         --content-max-width: calc(var(--spacing) * 150);
         --header-height: calc(var(--spacing) * 13);
-        --card-margin: calc(var(--spacing) * 1.5);
+        --card-gap: calc(var(--spacing) * 2);
         --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.12),
           0 1px 2px rgba(0, 0, 0, 0.24);
         --card-min-height: calc(28 * var(--spacing));
         --card-max-width: calc(var(--content-max-width) * 0.45);
+        --card-min-width: 200px;
         --card-border-radius: 5px;
         --inputs-padding: 4px;
         --inputs-font: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
@@ -131,21 +132,28 @@
       main {
         display: flex;
         flex: 1;
+        flex-direction: column;
+        padding: var(--spacing);
+      }
+
+      aside {
+        grid-column-start: 1;
+        grid-column-end: -1;
       }
 
       element-persister {
-        width: 100%;
-        display: flex;
-        flex-flow: row wrap;
+        display: grid;
+        grid-template-columns: repeat(
+          auto-fill,
+          minmax(var(--card-min-width), var(--card-max-width))
+        );
+        grid-gap: var(--card-gap);
         justify-content: center;
       }
 
       article {
         min-height: var(--card-min-height);
         overflow: hidden;
-        margin: var(--card-margin);
-        width: 100%;
-        max-width: var(--card-max-width);
         display: flex;
         flex-direction: column;
         border-radius: var(--card-border-radius);
@@ -177,6 +185,7 @@
     </header>
     <main>
       <element-persister>
+        <aside>Last saved: <span>Never</span></aside>
         <article>
           <input
             aria-label="Title of quadrant 1"
@@ -238,6 +247,10 @@
     class ElementPersister extends HTMLElement {
       PERSISTANCE_ID_ATTR_NAME = "data-persistance-id";
 
+      STORAGE_SAVE_TIME_ID = "last-save-time";
+
+      SAVE_TIME_DOM_ELEMENT_QUERY = "aside span";
+
       _getDomElementsToPersist() {
         const elementsToPersistQuery = `[${this.PERSISTANCE_ID_ATTR_NAME}]:not([${this.PERSISTANCE_ID_ATTR_NAME}=""])`;
         const elementsToPersist = Array.from(
@@ -270,19 +283,84 @@
         );
       }
 
-      _setupDomElementsPersisting() {
-        const changeHandler = (event) => {
-          this._getDomElementsToPersist().forEach((element) =>
-            this._persistValue(element)
-          );
-        };
+      _setSavedTime(saveTime) {
+        localStorage.setItem(this.STORAGE_SAVE_TIME_ID, saveTime.toString());
+        this._updateSaveTimeUi();
+      }
 
+      _getSavedTime() {
+        const storedVal = localStorage.getItem(this.STORAGE_SAVE_TIME_ID);
+        return storedVal ? Number.parseInt(storedVal) : null;
+      }
+
+      _roundToHalfDecimal(number) {
+        // rounds the number to the next .5
+        return Math.round(number * 2) / 2;
+      }
+
+      _getHoursTimeDiffString(timeDiffSeconds) {
+        const formatter = new Intl.RelativeTimeFormat("en");
+        const roundedHours = this._roundToHalfDecimal(
+          timeDiffSeconds / 60 / 60
+        );
+        return formatter.format(-roundedHours, "hour");
+      }
+
+      _getMinutesTimeDiffString(timeDiffSeconds) {
+        const formatter = new Intl.RelativeTimeFormat("en");
+        const roundedMinutes = this._roundToHalfDecimal(timeDiffSeconds / 60);
+        return formatter.format(-roundedMinutes, "minute");
+      }
+
+      _getTimeDiffToNowString(saveTime) {
+        const now = Date.now();
+        const timeDiffSeconds = (now - saveTime) / 1000;
+
+        if (timeDiffSeconds < 10) {
+          return "Just now";
+        } else if (timeDiffSeconds < 60) {
+          return "Less than a minute ago";
+        } else if (timeDiffSeconds < 60 * 60) {
+          return this._getMinutesTimeDiffString(timeDiffSeconds);
+        } else {
+          return this._getHoursTimeDiffString(timeDiffSeconds);
+        }
+        return timeDiffString;
+      }
+
+      _getSaveTimeDomElement() {
+        return this.querySelector(this.SAVE_TIME_DOM_ELEMENT_QUERY);
+      }
+
+      _updateSaveTimeUi() {
+        const saveTime = this._getSavedTime();
+        if (saveTime !== null) {
+          const saveTimeElement = this._getSaveTimeDomElement();
+          saveTimeElement.textContent = this._getTimeDiffToNowString(saveTime);
+        }
+      }
+
+      _setupSaveTimeUi() {
+        window.setInterval(() => this._updateSaveTimeUi(), 5 * 1000);
+        this._updateSaveTimeUi();
+      }
+
+      _persistAllValues() {
+        this._getDomElementsToPersist().forEach((element) =>
+          this._persistValue(element)
+        );
+        this._setSavedTime(Date.now());
+      }
+
+      _setupDomElementsPersisting() {
+        const changeHandler = () => this._persistAllValues();
         this.addEventListener("input", debounce(250, changeHandler));
       }
 
       connectedCallback() {
         this._fillDomElementsWithPersistedValues();
         this._setupDomElementsPersisting();
+        this._setupSaveTimeUi();
       }
     }
     window.customElements.define("element-persister", ElementPersister);
