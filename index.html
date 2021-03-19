@@ -87,6 +87,7 @@
           Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
           "Segoe UI Symbol";
         --font-color: #252525;
+        --font-secondary-color: #7c7c7c;
         --line-height: 1.5;
         --spacing: 8px;
         --content-max-width: calc(var(--spacing) * 150);
@@ -139,6 +140,7 @@
       aside {
         grid-column-start: 1;
         grid-column-end: -1;
+        color: var(--font-secondary-color);
       }
 
       element-persister {
@@ -185,7 +187,6 @@
     </header>
     <main>
       <element-persister>
-        <aside>Last saved: <span>Never</span></aside>
         <article>
           <input
             aria-label="Title of quadrant 1"
@@ -230,6 +231,7 @@
             data-persistance-id="ta_br"
           ></textarea>
         </article>
+        <aside>Last saved: <span>Never</span></aside>
       </element-persister>
     </main>
   </body>
