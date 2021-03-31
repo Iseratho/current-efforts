@@ -107,6 +107,14 @@
         --quadrant-title-font-weight: 700;
       }
 
+      @media print
+      {    
+          .no-print, .no-print *
+          {
+              display: none !important;
+          }
+      }
+
       body {
         display: flex;
         flex-direction: column;
@@ -182,7 +190,7 @@
     </style>
   </head>
   <body>
-    <header>
+    <header class="no-print">
       <h1>Current Efforts</h1>
     </header>
     <main>
@@ -231,7 +239,7 @@
             data-persistance-id="ta_br"
           ></textarea>
         </article>
-        <aside>Last saved: <span>Never</span></aside>
+        <aside  class="no-print">Last saved: <span>Never</span></aside>
       </element-persister>
     </main>
   </body>
