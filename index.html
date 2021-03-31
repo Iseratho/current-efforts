@@ -95,7 +95,7 @@
         --card-gap: calc(var(--spacing) * 2);
         --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.12),
           0 1px 2px rgba(0, 0, 0, 0.24);
-        --card-min-height: calc(28 * var(--spacing));
+        --card-min-height: calc(30 * var(--spacing));
         --card-max-width: calc(var(--content-max-width) * 0.45);
         --card-min-width: 200px;
         --card-border-radius: 5px;
@@ -105,6 +105,14 @@
         --quadrant-title-height: calc(5 * var(--spacing));
         --quadrant-title-background-color: #f3f3f3;
         --quadrant-title-font-weight: 700;
+      }
+
+      @media print
+      {    
+          .no-print, .no-print *
+          {
+              display: none !important;
+          }
       }
 
       body {
@@ -182,7 +190,7 @@
     </style>
   </head>
   <body>
-    <header>
+    <header class="no-print">
       <h1>Current Efforts</h1>
     </header>
     <main>
@@ -231,7 +239,7 @@
             data-persistance-id="ta_br"
           ></textarea>
         </article>
-        <aside>Last saved: <span>Never</span></aside>
+        <aside  class="no-print">Last saved: <span>Never</span></aside>
       </element-persister>
     </main>
   </body>
